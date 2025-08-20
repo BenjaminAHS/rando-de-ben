@@ -1,0 +1,41 @@
+---
+layout: default
+---
+
+<article class="rando">
+  <h1>{{ page.title }}</h1>
+  <p style="color:#555;">
+    {{ page.date | date: "%d %b %Y" }} — {{ page.distance }} • D+ {{ page.denivele }} • {{ page.difficulte }}
+    {% if page.lieu %} • {{ page.lieu }}{% endif %}
+  </p>
+
+  {% if page.gpx %}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <div id="map" style="height:420px;border-radius:12px;margin:12px 0;"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-gpx@1.7.0/gpx.min.js"></script>
+  <script>
+    const map = L.map('map');
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OSM' }).addTo(map);
+    const g = new L.GPX('{{ page.gpx }}', { async: true }).on('loaded', e => {
+      map.fitBounds(e.target.getBounds());
+    }).addTo(map);
+  </script>
+  {% endif %}
+
+  {{ content }}
+
+  {% if page.photos %}
+  <div style="display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));margin-top:12px;">
+    {% for ph in page.photos %}
+      <img src="{{ ph }}" alt="" style="width:100%;border-radius:12px;">
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if page.tags %}
+  <p style="margin-top:10px;">
+    {% for t in page.tags %}<span style="border:1px solid #ddd;border-radius:10px;padding:2px 8px;margin-right:6px;font-size:12px;">#{{ t }}</span>{% endfor %}
+  </p>
+  {% endif %}
+</article>
