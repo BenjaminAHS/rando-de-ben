@@ -8,7 +8,7 @@ lieu: "Ariège (Pyrénées)"
 tags: [Ariège, Cascade, Lac, Pyrénées]
 gpx: /assets/gpx/cascade-ars-guzet.gpx
 photos:
-  - /assets/img/cascade-ars.jpg
+  - /assets/img/cascade.jpg
   - /assets/img/top-cascade-ars.jpg
 ---
 
