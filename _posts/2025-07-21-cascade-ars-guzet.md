@@ -16,10 +16,10 @@ Superbe randonnée en Ariège avec deux points forts :
 - La **cascade d’Ars**, impressionnante chute d’eau en plusieurs étages.  
 - L’**étang de Guzet**, niché dans un cirque sauvage, idéal pour pique-nique.  
 
-Randonnée faite avec **Jess** le 21 août 2025.  
+Randonnée faite avec **Jess** le 21 juillet 2025.  
 Conditions météo pluvieuses 🌧️, sentiers bien balisés, mais passage un peu raide avant l’étang.  
 
-- ⏱️ Temps total : ~3h (A/R)  
+- ⏱️ Temps total : ~3h (A/R) temps prévu 6h. 
 - 📍 Départ : Aulus-les-Bains  
 - 🐐 Faune : aucun animaux croisés bien qu'on espérait voir un ours
 
