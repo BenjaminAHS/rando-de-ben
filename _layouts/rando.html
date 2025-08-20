@@ -13,10 +13,14 @@ layout: default
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <div id="map" style="height:420px;border-radius:12px;margin:12px 0;"></div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Parseur GPX -> GeoJSON -->
-    <script src="https://unpkg.com/@mapbox/togeojson@0.16.0/dist/togeojson.min.js"></script>
+    
+    <!-- togeojson UMD (expose window.toGeoJSON) -->
+    <script src="https://cdn.jsdelivr.net/npm/@mapbox/togeojson@0.16.0/dist/togeojson.umd.js"></script>
+    <!-- Fallback polyvalent (inclut togeojson en bundle) -->
+    <script src="https://unpkg.com/leaflet-omnivore@0.3.4/leaflet-omnivore.min.js"></script>
+    
     <script>
-      const gpxPath = '{{ site.url }}{{ site.baseurl }}{{ page.gpx }}?v={{ site.time | date: "%s" }}'; // cache-buster
+      const gpxPath = '{{ site.url }}{{ site.baseurl }}{{ page.gpx }}?v={{ site.time | date: "%s" }}';
     
       const map = L.map('map');
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -24,34 +28,51 @@ layout: default
       }).addTo(map);
       map.setView([45, 2], 6); // vue par défaut
     
-      fetch(gpxPath)
-        .then(r => {
-          if (!r.ok) throw new Error('HTTP ' + r.status + ' sur ' + gpxPath);
-          return r.text();
-        })
-        .then(txt => {
-          const dom = new DOMParser().parseFromString(txt, 'application/xml');
-          // Vérif parseur XML
-          if (dom.getElementsByTagName('parsererror').length) {
-            throw new Error('GPX invalide/encodage non lisible');
-          }
-          const gj = toGeoJSON.gpx(dom);
-          if (!gj || !gj.features || !gj.features.length) {
-            throw new Error('GPX sans trace/route exploitable');
-          }
-          const layer = L.geoJSON(gj);
-          layer.addTo(map);
-          map.fitBounds(layer.getBounds(), { padding:[10,10] });
-        })
-        .catch(err => {
-          console.error(err);
-          const el = document.createElement('p');
-          el.style.color = 'crimson';
-          el.textContent = '❌ Problème de lecture GPX : ' + err.message;
-          document.getElementById('map').after(el);
-        });
+      // 1) Tentative via toGeoJSON (plus léger)
+      if (window.toGeoJSON) {
+        fetch(gpxPath)
+          .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+          .then(txt => {
+            const dom = new DOMParser().parseFromString(txt, 'application/xml');
+            if (dom.getElementsByTagName('parsererror').length) throw new Error('GPX invalide');
+            const gj = toGeoJSON.gpx(dom);
+            if (!gj || !gj.features || !gj.features.length) throw new Error('Aucune trace exploitable');
+            const layer = L.geoJSON(gj).addTo(map);
+            map.fitBounds(layer.getBounds(), { padding: [10,10] });
+          })
+          .catch(err => {
+            console.warn('toGeoJSON a échoué → fallback omnivore', err);
+            loadWithOmnivore();
+          });
+      } else {
+        // 2) Fallback robuste
+        loadWithOmnivore();
+      }
+    
+      function loadWithOmnivore() {
+        if (!window.omnivore) {
+          showErr('Bibliothèque de lecture GPX introuvable');
+          return;
+        }
+        const layer = omnivore.gpx(gpxPath)
+          .on('ready', function() {
+            map.fitBounds(this.getBounds(), { padding: [10,10] });
+          })
+          .on('error', function(e) {
+            showErr('Impossible de lire le GPX (omnivore)');
+            console.error(e);
+          })
+          .addTo(map);
+      }
+    
+      function showErr(msg){
+        const el = document.createElement('p');
+        el.style.color = 'crimson';
+        el.textContent = '❌ ' + msg + ' : ' + gpxPath;
+        document.getElementById('map').after(el);
+      }
     </script>
-  {% endif %}
+{% endif %}
 
 {{ content }}
 
