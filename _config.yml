@@ -2,6 +2,9 @@ title: "Mes randonnées"
 description: "Carnet de randos (distance, D+, difficulté, cartes GPX)"
 theme: minima
 
+url: "https://benjaminahs.github.io"   # domaine
+baseurl: "/rando-de-ben"               # sous-dossier du site de projet
+
 plugins:
   - jekyll-feed
   - jekyll-seo-tag
