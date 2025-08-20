@@ -1,5 +1,5 @@
 ---
-title: "Cascade d’Ars et Étang de Guzet avec Jess"
+title: "Cascade d’Ars et Étang de Guzet avec Jess (1581m)"
 date: 2025-07-21
 distance: "14 km"
 denivele: "950 m"
