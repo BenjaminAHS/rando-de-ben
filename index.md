@@ -22,7 +22,9 @@ title: "Toutes mes randonnées"
       data-tags="{{ p.tags | join:' ' | downcase }}"
       data-difficulte="{{ p.difficulte }}"
       style="border:1px solid #e5e7eb;border-radius:14px;padding:14px;">
-    <a href="{{ p.url | relative_url }}" style="text-decoration:none;"><h3 ...>{{ p.title }}</h3></a>
+      <a href="{{ p.url | relative_url }}" style="text-decoration:none;display:block;margin:0 0 4px 0;">
+      <strong style="font-size:1.1rem;">{{ p.title | strip_html }}</strong>
+      </a>
     <div style="font-size:14px;color:#555;">
       {{ p.date | date: "%d %b %Y" }} — {{ p.distance }} • D+ {{ p.denivele }} • {{ p.difficulte }}
       {% if p.lieu %} • {{ p.lieu }}{% endif %}
