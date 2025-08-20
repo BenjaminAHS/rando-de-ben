@@ -6,7 +6,7 @@ denivele: "950 m"
 difficulte: "Moyenne"
 lieu: "Ariège (Pyrénées)"
 tags: [Ariège, Cascade, Lac, Pyrénées]
-gpx: /rando-de-ben/assets/gpx/cascade-ars-guzet.gpx
+gpx: /rando-de-ben/assets/gpx/cascade ars et étang de Guzet avec Jess.gpx
 photos:
   - /rando-de-ben/assets/img/cascade1.jpg
   - /rando-de-ben/assets/img/guzet1.jpg
