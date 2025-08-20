@@ -13,28 +13,45 @@ layout: default
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <div id="map" style="height:420px;border-radius:12px;margin:12px 0;"></div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-gpx@1.7.0/gpx.min.js"></script>
+    <!-- Parseur GPX -> GeoJSON -->
+    <script src="https://unpkg.com/@mapbox/togeojson@0.16.0/dist/togeojson.min.js"></script>
     <script>
-    // On construit l'URL ABSOLUE explicitement (sans filter relatif)
-    const gpxPath = '{{ site.url }}{{ site.baseurl }}{{ page.gpx }}';
-    console.log('GPX path:', gpxPath);
-  
-    const map = L.map('map');
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution:'© OpenStreetMap contributors'
-    }).addTo(map);
-  
-    new L.GPX(gpxPath, { async: true })
-      .on('loaded', e => map.fitBounds(e.target.getBounds()))
-      .on('error', () => {
-        const el = document.createElement('p');
-        el.style.color = 'crimson';
-        el.textContent = '❌ Impossible de charger le GPX : ' + gpxPath;
-        document.getElementById('map').after(el);
-      })
-      .addTo(map);
+      const gpxPath = '{{ site.url }}{{ site.baseurl }}{{ page.gpx }}?v={{ site.time | date: "%s" }}'; // cache-buster
+    
+      const map = L.map('map');
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution:'© OpenStreetMap contributors'
+      }).addTo(map);
+      map.setView([45, 2], 6); // vue par défaut
+    
+      fetch(gpxPath)
+        .then(r => {
+          if (!r.ok) throw new Error('HTTP ' + r.status + ' sur ' + gpxPath);
+          return r.text();
+        })
+        .then(txt => {
+          const dom = new DOMParser().parseFromString(txt, 'application/xml');
+          // Vérif parseur XML
+          if (dom.getElementsByTagName('parsererror').length) {
+            throw new Error('GPX invalide/encodage non lisible');
+          }
+          const gj = toGeoJSON.gpx(dom);
+          if (!gj || !gj.features || !gj.features.length) {
+            throw new Error('GPX sans trace/route exploitable');
+          }
+          const layer = L.geoJSON(gj);
+          layer.addTo(map);
+          map.fitBounds(layer.getBounds(), { padding:[10,10] });
+        })
+        .catch(err => {
+          console.error(err);
+          const el = document.createElement('p');
+          el.style.color = 'crimson';
+          el.textContent = '❌ Problème de lecture GPX : ' + err.message;
+          document.getElementById('map').after(el);
+        });
     </script>
-{% endif %}
+  {% endif %}
 
 {{ content }}
 
@@ -45,16 +62,6 @@ layout: default
   {% endfor %}
 </div>
 {% endif %}
-
-  {{ content }}
-
-  {% if page.photos %}
-  <div style="display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));margin-top:12px;">
-    {% for ph in page.photos %}
-      <img src="{{ ph | relative_url }}" alt="" style="width:100%;border-radius:12px;">
-    {% endfor %}
-  </div>
-  {% endif %}
 
   {% if page.tags %}
   <p style="margin-top:10px;">
