@@ -8,8 +8,8 @@ lieu: "Ariège (Pyrénées)"
 tags: [Ariège, Cascade, Lac, Pyrénées]
 gpx: /assets/gpx/cascade ars et étang de Guzet avec Jess.gpx
 photos:
-  - /assets/img/cascade1.jpg
-  - /assets/img/guzet1.jpg
+  - /assets/img/cascade-ars.jpg
+  - /assets/img/top-cascade-ars.jpg
 ---
 
 Superbe randonnée en Ariège avec deux points forts :  
