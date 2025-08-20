@@ -15,11 +15,25 @@ layout: default
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-gpx@1.7.0/gpx.min.js"></script>
   <script>
+    const gpxPath = '{{ page.gpx | relative_url }}';
+
     const map = L.map('map');
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OSM' }).addTo(map);
-    const g = new L.GPX('{{ page.gpx | relative_url }}', { async: true }).on('loaded', e => {
-      map.fitBounds(e.target.getBounds());
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution:'© OpenStreetMap contributors'
     }).addTo(map);
+
+    // Vue par défaut (au cas où le GPX ne charge pas)
+    map.setView([45, 2], 5);
+
+    new L.GPX(gpxPath, { async: true })
+      .on('loaded', e => map.fitBounds(e.target.getBounds()))
+      .on('error', () => {
+        const el = document.createElement('p');
+        el.style.color = 'crimson';
+        el.textContent = 'Impossible de charger le GPX : ' + gpxPath;
+        document.getElementById('map').after(el);
+    })
+    .addTo(map);
   </script>
   {% endif %}
 
