@@ -15,27 +15,36 @@ layout: default
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-gpx@1.7.0/gpx.min.js"></script>
   <script>
-    const gpxPath = '{{ page.gpx | relative_url }}';
+  // On construit l'URL ABSOLUE explicitement (sans filter relatif)
+  const gpxPath = '{{ site.url }}{{ site.baseurl }}{{ page.gpx }}';
+  console.log('GPX path:', gpxPath);
 
-    const map = L.map('map');
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution:'© OpenStreetMap contributors'
-    }).addTo(map);
+  const map = L.map('map');
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:'© OpenStreetMap contributors'
+  }).addTo(map);
 
-    // Vue par défaut (au cas où le GPX ne charge pas)
-    map.setView([45, 2], 5);
-
-    new L.GPX(gpxPath, { async: true })
-      .on('loaded', e => map.fitBounds(e.target.getBounds()))
-      .on('error', () => {
-        const el = document.createElement('p');
-        el.style.color = 'crimson';
-        el.textContent = 'Impossible de charger le GPX : ' + gpxPath;
-        document.getElementById('map').after(el);
+  new L.GPX(gpxPath, { async: true })
+    .on('loaded', e => map.fitBounds(e.target.getBounds()))
+    .on('error', () => {
+      const el = document.createElement('p');
+      el.style.color = 'crimson';
+      el.textContent = '❌ Impossible de charger le GPX : ' + gpxPath;
+      document.getElementById('map').after(el);
     })
     .addTo(map);
-  </script>
-  {% endif %}
+</script>
+{% endif %}
+
+{{ content }}
+
+{% if page.photos %}
+<div style="display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));margin-top:12px;">
+  {% for ph in page.photos %}
+    <img src="{{ site.url }}{{ site.baseurl }}{{ ph }}" alt="" style="width:100%;border-radius:12px;">
+  {% endfor %}
+</div>
+{% endif %}
 
   {{ content }}
 
