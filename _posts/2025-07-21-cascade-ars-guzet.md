@@ -8,8 +8,8 @@ lieu: "Ariège (Pyrénées)"
 tags: [Ariège, Cascade, Lac, Pyrénées]
 gpx: /assets/gpx/cascade-ars-guzet.gpx
 photos:
-  - /assets/img/cascade.jpg
-  - /assets/img/top-cascade-ars.jpg
+  - /assets/img/ars/cascade.jpg
+  - /assets/img/ars/top-cascade-ars.jpg
 ---
 
 Superbe randonnée en Ariège avec deux points forts :  
