@@ -17,7 +17,7 @@ layout: default
   <script>
     const map = L.map('map');
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OSM' }).addTo(map);
-    const g = new L.GPX('{{ page.gpx }}', { async: true }).on('loaded', e => {
+    const g = new L.GPX('{{ page.gpx | relative_url }}', { async: true }).on('loaded', e => {
       map.fitBounds(e.target.getBounds());
     }).addTo(map);
   </script>
@@ -28,7 +28,7 @@ layout: default
   {% if page.photos %}
   <div style="display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));margin-top:12px;">
     {% for ph in page.photos %}
-      <img src="{{ ph }}" alt="" style="width:100%;border-radius:12px;">
+      <img src="{{ ph | relative_url }}" alt="" style="width:100%;border-radius:12px;">
     {% endfor %}
   </div>
   {% endif %}
