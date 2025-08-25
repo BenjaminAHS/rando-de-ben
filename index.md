@@ -1,9 +1,9 @@
 ---
 layout: default
-title: "Mes aventures"
+title: "Mes randonnées"
 ---
 
-<h1>Toutes mes randonnées</h1>
+<h1>Toutes mes aventures</h1>
 
 
 <nav style="margin:8px 0 16px;">
