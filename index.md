@@ -1,6 +1,6 @@
 ---
 layout: default
-title: "Mes randonnées"
+title: "Randonnées"
 ---
 
 <h1>Toutes mes aventures</h1>
