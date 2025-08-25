@@ -5,6 +5,11 @@ title: "Toutes mes randonnées"
 
 <h1>Toutes mes randonnées</h1>
 
+<nav style="margin:8px 0 16px 0;">
+  <strong>Randonnées</strong> ·
+  <a href="{{ '/via-ferrata/' | relative_url }}">Via ferrata</a>
+</nav>
+
 <input id="search" type="text" placeholder="Rechercher (titre, tags, lieu...)" style="padding:8px;width:100%;max-width:480px;margin:12px 0;" />
 
 <div style="margin:8px 0;">
