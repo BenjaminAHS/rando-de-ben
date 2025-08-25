@@ -1,14 +1,26 @@
 ---
 layout: default
-title: "Toutes mes randonnées"
+title: "Mes aventures"
 ---
 
 <h1>Toutes mes randonnées</h1>
 
-<nav style="margin:8px 0 16px 0;">
-  <strong>Randonnées</strong> ·
-  <a href="{{ '/via-ferrata/' | relative_url }}">Via ferrata</a>
+
+<nav style="margin:8px 0 16px;">
+  {% assign home_url = '/' | relative_url %}
+  {% assign vf_url = '/via-ferrata/' | relative_url %}
+
+  <a href="{{ home_url }}"
+     {% if page.url == home_url %}style="font-weight:700;" aria-current="page"{% endif %}>
+     Randonnées
+  </a>
+  ·
+  <a href="{{ vf_url }}"
+     {% if page.url == vf_url %}style="font-weight:700;" aria-current="page"{% endif %}>
+     Via ferrata
+  </a>
 </nav>
+
 
 <input id="search" type="text" placeholder="Rechercher (titre, tags, lieu...)" style="padding:8px;width:100%;max-width:480px;margin:12px 0;" />
 
