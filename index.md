@@ -1,32 +1,20 @@
 ---
 layout: default
-title: "Randonnées"
+title: "Mes randonnées"
 ---
 
-<h1>Toutes mes aventures</h1>
-
-
+<!-- Menu -->
 <nav style="margin:8px 0 16px;">
-  {% assign home_url = '/' | relative_url %}
-  {% assign vf_url = '/via-ferrata/' | relative_url %}
-
-  <a href="{{ home_url }}"
-     {% if page.url == home_url %}style="font-weight:700;" aria-current="page"{% endif %}>
-     Randonnées
-  </a>
-  ·
-  <a href="{{ vf_url }}"
-     {% if page.url == vf_url %}style="font-weight:700;" aria-current="page"{% endif %}>
-     Via ferrata
-  </a>
+  <a href="{{ '/' | relative_url }}">Randonnées</a> ·
+  <a href="{{ '/via-ferrata/' | relative_url }}">Via ferrata</a>
 </nav>
 
 <!-- ====== CARTE DES SORTIES ====== -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <div id="mapIndex" style="height:520px;border-radius:12px;margin:12px 0;"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<!-- GPX -> GeoJSON pour calcul du point si lat/lng absents -->
 <script src="https://cdn.jsdelivr.net/npm/@mapbox/togeojson@0.16.0/dist/togeojson.umd.js"></script>
+<script src="https://unpkg.com/leaflet-omnivore@0.3.4/leaflet-omnivore.min.js"></script>
 
 <script>
   // --- utils robustes ---
@@ -36,6 +24,7 @@ title: "Randonnées"
     return Number.isFinite(n) ? n : null;
   };
 
+  // Carte (vue France par défaut — on ne recentre pas automatiquement)
   const map = L.map('mapIndex');
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap' }).addTo(map);
   map.setView([46.5, 2.5], 6);
@@ -54,7 +43,7 @@ title: "Randonnées"
      .addTo(group);
   }
 
-  // --- données depuis Jekyll (avec fallbacks latitude/longitude/lon) ---
+  // Posts -> tableau d'items (lat/lng ou centre de GPX)
   const items = [
   {% assign posts_sorted = site.posts | sort: 'date' | reverse %}
   {% for p in posts_sorted %}
@@ -62,7 +51,6 @@ title: "Randonnées"
       title: {{ p.title | jsonify }},
       url: "{{ p.url | relative_url }}",
       type: "{% if p.categories contains 'via-ferrata' %}via{% else %}rando{% endif %}",
-      // on garde toutes les variantes possibles :
       lat: {% if p.lat %}{{ p.lat }}{% elsif p.latitude %}{{ p.latitude }}{% else %}null{% endif %},
       lng: {% if p.lng %}{{ p.lng }}{% elsif p.lon %}{{ p.lon }}{% elsif p.longitude %}{{ p.longitude }}{% else %}null{% endif %},
       gpx: {% if p.gpx %}"{{ site.url }}{{ site.baseurl }}{{ p.gpx }}?v={{ site.time | date: '%s' }}"{% else %}null{% endif %}
@@ -70,63 +58,59 @@ title: "Randonnées"
   {% endfor %}
   ];
 
-  const pending = [];
+  function addFromGpx(it){
+    if(!it.gpx) return Promise.resolve();
+    // 1) Essai via toGeoJSON (léger)
+    return fetch(it.gpx)
+      .then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
+      .then(txt => {
+        if (!window.toGeoJSON) throw new Error('toGeoJSON indisponible');
+        const dom = new DOMParser().parseFromString(txt, 'application/xml');
+        if (dom.getElementsByTagName('parsererror').length) throw new Error('XML invalide');
+        const gj = toGeoJSON.gpx(dom);
+        if (!gj || !gj.features || !gj.features.length) throw new Error('Aucune feature');
+        const b = L.geoJSON(gj).getBounds().getCenter();
+        addPoint(it, b.lat, b.lng);
+      })
+      .catch(() => {
+        // 2) Fallback via omnivore (robuste)
+        return new Promise(resolve => {
+          if (!window.omnivore) { fails.push(it.title + ' (lib manquante)'); return resolve(); }
+          const temp = omnivore.gpx(it.gpx)
+            .on('ready', function(){
+              const c = this.getBounds().getCenter();
+              addPoint(it, c.lat, c.lng);
+              map.removeLayer(this); // on n'affiche pas la trace sur l'accueil
+              resolve();
+            })
+            .on('error', function(){
+              fails.push(it.title);
+              resolve();
+            })
+            .addTo(map);
+        });
+      });
+  }
 
+  const pending = [];
   items.forEach(it => {
     const lat = toNum(it.lat);
     const lng = toNum(it.lng);
     if (lat !== null && lng !== null) {
       addPoint(it, lat, lng);
-      return;
-    }
-    // sinon on tente via GPX si dispo
-    if (it.gpx) {
-      pending.push(
-        fetch(it.gpx)
-          .then(r => r.ok ? r.text() : Promise.reject('HTTP ' + r.status))
-          .then(txt => {
-            if (!window.toGeoJSON) throw 'toGeoJSON indisponible';
-            const dom = new DOMParser().parseFromString(txt, 'application/xml');
-            if (dom.getElementsByTagName('parsererror').length) throw 'XML invalide';
-            const gj = toGeoJSON.gpx(dom);
-            if (!gj || !gj.features || !gj.features.length) throw 'Aucune feature';
-            const b = L.geoJSON(gj).getBounds().getCenter();
-            addPoint(it, b.lat, b.lng);
-          })
-          .catch(err => {
-            // dernier fallback: omnivore si chargé
-            if (window.omnivore) {
-              return new Promise(resolve => {
-                const temp = omnivore.gpx(it.gpx)
-                  .on('ready', function(){
-                    const c = this.getBounds().getCenter();
-                    addPoint(it, c.lat, c.lng);
-                    map.removeLayer(this);
-                    resolve();
-                  })
-                  .on('error', function(){
-                    fails.push(it.title);
-                    resolve();
-                  })
-                  .addTo(map);
-              });
-            } else {
-              fails.push(it.title);
-            }
-          })
-      );
+    } else if (it.gpx) {
+      pending.push(addFromGpx(it));
     } else {
       fails.push(it.title + ' (pas de lat/lng ni gpx)');
     }
   });
 
+  // On NE recentre PAS automatiquement (on garde la vue France)
   Promise.all(pending).then(() => {
-    if (group.getLayers().length) {
-      map.fitBounds(group.getBounds().pad(0.12));
-    } else {
+    if (!group.getLayers().length) {
       const p = document.createElement('p');
       p.style.color = 'crimson';
-      p.textContent = 'Aucun point placé : ajoute lat/lng (format 45.2723 / 5.7763) ou un GPX.';
+      p.textContent = 'Aucun point placé : ajoute lat/lng (45.2723 / 5.7763) ou un GPX.';
       document.getElementById('mapIndex').after(p);
     }
     if (fails.length){
@@ -135,14 +119,30 @@ title: "Randonnées"
       p.textContent = 'Non placés (coordonnées/GPX non lus) : ' + fails.join(', ');
       document.getElementById('mapIndex').after(p);
     }
-    // Debug console
-    console.log('Items:', items);
     console.log('Markers placés:', group.getLayers().length);
-    if (fails.length) console.warn('Échecs:', fails);
   });
+
+  // Bouton "Voir toutes les sorties"
+  const zoomCtrl = L.control({position:'topleft'});
+  zoomCtrl.onAdd = function(){
+    const btn = L.DomUtil.create('button');
+    btn.textContent = 'Voir toutes les sorties';
+    btn.style.cssText = 'background:white;border:1px solid #ddd;border-radius:8px;padding:6px 10px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.1);';
+    btn.onclick = () => {
+      if (group.getLayers().length) {
+        map.fitBounds(group.getBounds().pad(0.12));
+      } else {
+        map.setView([46.5, 2.5], 6); // fallback France
+      }
+    };
+    return btn;
+  };
+  zoomCtrl.addTo(map);
 </script>
 <!-- ====== FIN CARTE ====== -->
 
+<!-- ====== LISTE + RECHERCHE/FILTRES ====== -->
+<h1>Toutes mes randonnées</h1>
 
 <input id="search" type="text" placeholder="Rechercher (titre, tags, lieu...)" style="padding:8px;width:100%;max-width:480px;margin:12px 0;" />
 
@@ -161,14 +161,20 @@ title: "Randonnées"
       data-tags="{{ p.tags | join:' ' | downcase }}"
       data-difficulte="{{ p.difficulte }}"
       style="border:1px solid #e5e7eb;border-radius:14px;padding:14px;">
-      <a href="{{ p.url | relative_url }}" style="text-decoration:none;display:block;margin:0 0 4px 0;">
+    <a href="{{ p.url | relative_url }}" style="text-decoration:none;display:block;margin:0 0 4px 0;">
       <strong style="font-size:1.1rem;">{{ p.title | strip_html }}</strong>
-      </a>
+    </a>
     <div style="font-size:14px;color:#555;">
       {{ p.date | date: "%d %b %Y" }} — {{ p.distance }} • D+ {{ p.denivele }} • {{ p.difficulte }}
       {% if p.lieu %} • {{ p.lieu }}{% endif %}
     </div>
-    {% if p.tags %}<div style="margin-top:6px;">{% for t in p.tags %}<span style="border:1px solid #ddd;border-radius:10px;padding:2px 8px;margin-right:6px;font-size:12px;">#{{ t }}</span>{% endfor %}</div>{% endif %}
+    {% if p.tags %}
+      <div style="margin-top:6px;">
+        {% for t in p.tags %}
+          <span style="border:1px solid #ddd;border-radius:10px;padding:2px 8px;margin-right:6px;font-size:12px;">#{{ t }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
   </li>
   {% endfor %}
 </ul>
