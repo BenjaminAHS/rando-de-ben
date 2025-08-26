@@ -12,6 +12,8 @@ photos:
   - /assets/img/valier-2.jpg
   - /assets/img/valier-3.jpg
 # cover: /assets/img/valier-1.jpg  # Optionnel : image de couverture sur la liste
+lat: 42.7892
+lng: 1.1743
 ---
 
 Ascension du **Mont Valier (2838 m)**, sommet emblématique des Pyrénées ariégeoises.  
