@@ -11,6 +11,8 @@ photos:
   - /assets/img/chamechaude-1.jpg
   - /assets/img/chamechaude-2.jpg
 # cover: /assets/img/chamechaude-1.jpg  # (optionnel si tu veux une image de couverture plus tard)
+lat: 45.2724     # ← coordonnées GPS (latitude)
+lng: 5.7763      # ← coordonnées GPS (longitude)
 ---
 
 Ascension du **point culminant de la Chartreuse** par l’itinéraire classique.
