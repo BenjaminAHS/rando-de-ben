@@ -29,9 +29,32 @@ title: "Randonnées"
 <script src="https://cdn.jsdelivr.net/npm/@mapbox/togeojson@0.16.0/dist/togeojson.umd.js"></script>
 
 <script>
-  const SITE = '{{ site.url }}{{ site.baseurl }}';
+  // --- utils robustes ---
+  const toNum = v => {
+    if (v === null || v === undefined) return null;
+    const n = Number(String(v).trim().replace(',', '.'));
+    return Number.isFinite(n) ? n : null;
+  };
 
-  // Données générées par Jekyll depuis tes posts
+  const map = L.map('mapIndex');
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap' }).addTo(map);
+  map.setView([46.5, 2.5], 6);
+
+  const group = L.featureGroup().addTo(map);
+  const fails = [];
+
+  function styleFor(type){
+    return type === 'via'
+      ? {radius:7, weight:1.5, color:'#b91c1c', fillColor:'#ef4444', fillOpacity:0.8}
+      : {radius:7, weight:1.5, color:'#1d4ed8', fillColor:'#3b82f6', fillOpacity:0.8};
+  }
+  function addPoint(it, lat, lng){
+    L.circleMarker([lat, lng], styleFor(it.type))
+     .bindPopup(`<b>${it.title}</b><br><a href="${it.url}">Voir la fiche</a>`)
+     .addTo(group);
+  }
+
+  // --- données depuis Jekyll (avec fallbacks latitude/longitude/lon) ---
   const items = [
   {% assign posts_sorted = site.posts | sort: 'date' | reverse %}
   {% for p in posts_sorted %}
@@ -39,83 +62,84 @@ title: "Randonnées"
       title: {{ p.title | jsonify }},
       url: "{{ p.url | relative_url }}",
       type: "{% if p.categories contains 'via-ferrata' %}via{% else %}rando{% endif %}",
-      lat: {% if p.lat %}{{ p.lat }}{% else %}null{% endif %},
-      lng: {% if p.lng %}{{ p.lng }}{% else %}null{% endif %},
+      // on garde toutes les variantes possibles :
+      lat: {% if p.lat %}{{ p.lat }}{% elsif p.latitude %}{{ p.latitude }}{% else %}null{% endif %},
+      lng: {% if p.lng %}{{ p.lng }}{% elsif p.lon %}{{ p.lon }}{% elsif p.longitude %}{{ p.longitude }}{% else %}null{% endif %},
       gpx: {% if p.gpx %}"{{ site.url }}{{ site.baseurl }}{{ p.gpx }}?v={{ site.time | date: '%s' }}"{% else %}null{% endif %}
     }{% unless forloop.last %},{% endunless %}
   {% endfor %}
   ];
 
-  // Carte
-  const map = L.map('mapIndex');
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap'}).addTo(map);
-  map.setView([46.5, 2.5], 6); // France par défaut
-
-  const group = L.featureGroup().addTo(map);
-
-  // Style marqueurs (rando vs via)
-  function styleFor(type){
-    return type === 'via'
-      ? {radius:7, weight:1.5, color:'#b91c1c', fillColor:'#ef4444', fillOpacity:0.8} // via ferrata (rouge)
-      : {radius:7, weight:1.5, color:'#1d4ed8', fillColor:'#3b82f6', fillOpacity:0.8}; // rando (bleu)
-  }
-
-  // Ajoute un point (lat/lng connus)
-  function addPoint(it, lat, lng){
-    const marker = L.circleMarker([lat, lng], styleFor(it.type))
-      .bindPopup(`<b>${it.title}</b><br><a href="${it.url}">Voir la fiche</a>`);
-    marker.addTo(group);
-  }
-
-  // Si pas de lat/lng, calcule via GPX (centre des bounds)
-  function addFromGpx(it){
-    if(!it.gpx) return;
-    return fetch(it.gpx)
-      .then(r => r.text())
-      .then(txt => {
-        const dom = new DOMParser().parseFromString(txt, 'application/xml');
-        const gj = toGeoJSON.gpx(dom);
-        if (!gj || !gj.features || !gj.features.length) return;
-        const layer = L.geoJSON(gj);
-        const b = layer.getBounds();
-        const c = b.getCenter();
-        addPoint(it, c.lat, c.lng);
-      })
-      .catch(()=>{ /* silencieux si une trace ne charge pas */ });
-  }
-
-  // Pipeline : pose les points
   const pending = [];
+
   items.forEach(it => {
-    if (it.lat !== null && it.lng !== null) {
-      addPoint(it, it.lat, it.lng);
-    } else if (it.gpx) {
-      pending.push(addFromGpx(it));
+    const lat = toNum(it.lat);
+    const lng = toNum(it.lng);
+    if (lat !== null && lng !== null) {
+      addPoint(it, lat, lng);
+      return;
+    }
+    // sinon on tente via GPX si dispo
+    if (it.gpx) {
+      pending.push(
+        fetch(it.gpx)
+          .then(r => r.ok ? r.text() : Promise.reject('HTTP ' + r.status))
+          .then(txt => {
+            if (!window.toGeoJSON) throw 'toGeoJSON indisponible';
+            const dom = new DOMParser().parseFromString(txt, 'application/xml');
+            if (dom.getElementsByTagName('parsererror').length) throw 'XML invalide';
+            const gj = toGeoJSON.gpx(dom);
+            if (!gj || !gj.features || !gj.features.length) throw 'Aucune feature';
+            const b = L.geoJSON(gj).getBounds().getCenter();
+            addPoint(it, b.lat, b.lng);
+          })
+          .catch(err => {
+            // dernier fallback: omnivore si chargé
+            if (window.omnivore) {
+              return new Promise(resolve => {
+                const temp = omnivore.gpx(it.gpx)
+                  .on('ready', function(){
+                    const c = this.getBounds().getCenter();
+                    addPoint(it, c.lat, c.lng);
+                    map.removeLayer(this);
+                    resolve();
+                  })
+                  .on('error', function(){
+                    fails.push(it.title);
+                    resolve();
+                  })
+                  .addTo(map);
+              });
+            } else {
+              fails.push(it.title);
+            }
+          })
+      );
+    } else {
+      fails.push(it.title + ' (pas de lat/lng ni gpx)');
     }
   });
 
-  // Ajuste la vue après ajout (y compris async GPX)
   Promise.all(pending).then(() => {
     if (group.getLayers().length) {
-      map.fitBounds(group.getBounds().pad(0.1));
+      map.fitBounds(group.getBounds().pad(0.12));
+    } else {
+      const p = document.createElement('p');
+      p.style.color = 'crimson';
+      p.textContent = 'Aucun point placé : ajoute lat/lng (format 45.2723 / 5.7763) ou un GPX.';
+      document.getElementById('mapIndex').after(p);
     }
+    if (fails.length){
+      const p = document.createElement('p');
+      p.style.color = '#a16207';
+      p.textContent = 'Non placés (coordonnées/GPX non lus) : ' + fails.join(', ');
+      document.getElementById('mapIndex').after(p);
+    }
+    // Debug console
+    console.log('Items:', items);
+    console.log('Markers placés:', group.getLayers().length);
+    if (fails.length) console.warn('Échecs:', fails);
   });
-
-  // Petite légende
-  const legend = L.control({position:'topright'});
-  legend.onAdd = function(){
-    const d = L.DomUtil.create('div','legend');
-    d.style.background = 'white'; d.style.padding='6px 8px'; d.style.borderRadius='8px'; d.style.boxShadow='0 1px 4px rgba(0,0,0,.1)';
-    d.innerHTML = `
-      <div style="display:flex;gap:10px;align-items:center;">
-        <span style="display:inline-block;width:10px;height:10px;background:#3b82f6;border:2px solid #1d4ed8;border-radius:50%;"></span> Randonnée
-      </div>
-      <div style="display:flex;gap:10px;align-items:center;margin-top:6px;">
-        <span style="display:inline-block;width:10px;height:10px;background:#ef4444;border:2px solid #b91c1c;border-radius:50%;"></span> Via ferrata
-      </div>`;
-    return d;
-  };
-  legend.addTo(map);
 </script>
 <!-- ====== FIN CARTE ====== -->
 
