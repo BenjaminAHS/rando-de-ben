@@ -77,12 +77,92 @@ layout: default
 {{ content }}
 
 {% if page.photos %}
-<div style="display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));margin-top:12px;">
+<style>
+  /* Grille uniforme */
+  .gallery {
+    display:grid;
+    grid-template-columns: repeat(auto-fill,minmax(240px,1fr));
+    gap:10px; margin-top:12px;
+  }
+  .gallery .tile{
+    position:relative; width:100%;
+    padding-top:66.66%;           /* ratio 3:2 → change 56.25% pour 16:9 */
+    overflow:hidden; border-radius:12px;
+    background:#f3f4f6; box-shadow:0 1px 3px rgba(0,0,0,.08);
+  }
+  .gallery img{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:cover; cursor:zoom-in;
+  }
+
+  /* Lightbox plein écran */
+  .lightbox{position:fixed; inset:0; background:rgba(0,0,0,.92);
+    display:none; align-items:center; justify-content:center; z-index:9999;}
+  .lightbox.open{display:flex}
+  .lightbox img{max-width:90vw; max-height:90vh; border-radius:10px}
+  .lightbox .btn{
+    position:absolute; top:50%; transform:translateY(-50%);
+    font-size:28px; color:#fff; background:rgba(0,0,0,.35);
+    border:none; border-radius:10px; padding:10px 14px; cursor:pointer;
+  }
+  .lightbox .close{top:16px; right:16px; transform:none; font-size:26px}
+  .lightbox .prev{left:16px}
+  .lightbox .next{right:16px}
+</style>
+
+<div class="gallery">
   {% for ph in page.photos %}
-    <img src="{{ site.url }}{{ site.baseurl }}{{ ph }}" alt="">
+    <div class="tile">
+      <img loading="lazy"
+           src="{{ site.url }}{{ site.baseurl }}{{ ph }}"
+           alt="Photo {{ forloop.index }} — {{ page.title }}"
+           data-idx="{{ forloop.index0 }}">
+    </div>
   {% endfor %}
 </div>
+
+<div class="lightbox" id="lightbox">
+  <button class="btn close" aria-label="Fermer">✕</button>
+  <button class="btn prev" aria-label="Précédente">‹</button>
+  <img id="lightbox-img" src="" alt="">
+  <button class="btn next" aria-label="Suivante">›</button>
+</div>
+
+<script>
+(function(){
+  const thumbs = [...document.querySelectorAll('.gallery img')];
+  if(!thumbs.length) return;
+
+  const lb = document.getElementById('lightbox');
+  const lbImg = document.getElementById('lightbox-img');
+  const btnClose = lb.querySelector('.close');
+  const btnPrev  = lb.querySelector('.prev');
+  const btnNext  = lb.querySelector('.next');
+  let idx = 0;
+
+  function show(i){
+    idx = (i + thumbs.length) % thumbs.length;
+    lbImg.src = thumbs[idx].src;          // utilise l’image en taille d’origine
+    lb.classList.add('open');
+  }
+  function close(){ lb.classList.remove('open'); lbImg.src=''; }
+
+  thumbs.forEach((im,i)=> im.addEventListener('click', ()=>show(i)));
+  btnClose.addEventListener('click', close);
+  lb.addEventListener('click', e => { if(e.target === lb) close(); });
+  btnPrev.addEventListener('click', ()=>show(idx-1));
+  btnNext.addEventListener('click', ()=>show(idx+1));
+  window.addEventListener('keydown', e=>{
+    if(!lb.classList.contains('open')) return;
+    if(e.key==='Escape') close();
+    if(e.key==='ArrowLeft') show(idx-1);
+    if(e.key==='ArrowRight') show(idx+1);
+  });
+})();
+</script>
 {% endif %}
+
 
   {% if page.tags %}
   <p style="margin-top:10px;">
