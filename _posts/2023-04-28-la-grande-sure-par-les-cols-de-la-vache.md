@@ -6,7 +6,7 @@ denivele: "1100 m"         # ajuste si besoin
 difficulte: "Moyenne"      # Facile | Moyenne | Difficile
 lieu: "Chartreuse (Isère)"
 tags: [Chartreuse, Sommet, Boucle]
-gpx: /assets/gpx/grande-sure-cols-vache-2023-04-28.gpx
+gpx: /assets/gpx/2023-04-28-grande-sure-cols-vache.gpx
 photos:
   - /assets/img/grande-sure-1.jpg
   - /assets/img/grande-sure-2.jpg
