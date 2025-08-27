@@ -1,0 +1,18 @@
+---
+# ce front matter est nécessaire pour que Jekyll compile ce SCSS → /assets/main.css
+---
+
+@import "minima";  /* on garde le thème, puis on le surchage */
+
+.site-header .wrapper {
+  display: flex;
+  justify-content: center;   /* centre horizontalement */
+}
+
+.site-title {
+  text-align: center;
+  margin: .8rem 0;
+}
+
+/* par sécurité, si un menu réapparaissait, on le masque */
+.site-nav { display: none !important; }
