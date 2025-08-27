@@ -8,9 +8,9 @@ lieu: "Chartreuse (Isère)"
 tags: [Chartreuse, Sommet, Boucle]
 gpx: /assets/gpx/2023-04-28-grande-sure-cols-vache.gpx
 photos:
-  - /assets/img/grande-sure-1.jpg
-  - /assets/img/grande-sure-2.jpg
-  - /assets/img/grande-sure-3.jpg
+  - /assets/img/grande-sure/grande-sure-1.jpg
+  - /assets/img/grande-sure/grande-sure-2.jpg
+  - /assets/img/grande-sure/grande-sure-3.jpg
 # Optionnel : pour que le point apparaisse sans lire le GPX
 
 lat: 45.34
