@@ -9,10 +9,11 @@ tags: [Chartreuse, Sommet, Boucle]
 gpx: /assets/gpx/2023-04-28-grande-sure-cols-vache.gpx
 photos:
   - /assets/img/grande-sure-1.jpg
-  - /assets/img/grande-sure-2.jpg
-# Optionnel : pour que le point apparaisse sans lire le GPX :
-# lat: 45.34
-# lng: 5.68
+  - /assets/img/grande-sure-2.png
+# Optionnel : pour que le point apparaisse sans lire le GPX
+
+lat: 45.34
+lng: 5.68
 ---
 
 Boucle classique vers **la Grande Sure** en passant par les **cols de la Petite et de la Grande Vache**.
