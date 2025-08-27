@@ -1,5 +1,5 @@
 ---
-title: "La Grande Sure par les cols de la Vache"
+title: "La Grande Sure par les cols de la Vache (1920m)"
 date: 2023-04-28
 distance: "14 km"          # ajuste si besoin
 denivele: "1100 m"         # ajuste si besoin
