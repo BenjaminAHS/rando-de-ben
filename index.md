@@ -3,6 +3,12 @@ layout: default
 title: "Mes randonnées"
 ---
 
+<style>
+/* centre le titre de la barre du haut et cache le menu */
+.site-header .wrapper { display:flex; justify-content:center; }
+.site-nav { display:none !important; }
+</style>
+
 <!-- Menu -->
 <nav style="margin:8px 0 16px;">
   <a href="{{ '/' | relative_url }}">Randonnées</a> ·
