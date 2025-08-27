@@ -1,6 +1,8 @@
 title: "Carnet de randonnées de Ben"
 description: "Mes randos et via ferrata : distances, D+, difficultés, photos et traces GPX."
 theme: minima
+header_pages: []   # plus aucun lien de menu dans l’en-tête
+
 
 url: "https://benjaminahs.github.io"   # domaine
 baseurl: "/rando-de-ben"               # sous-dossier du site de projet
