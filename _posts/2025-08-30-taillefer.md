@@ -10,10 +10,13 @@ gpx: /assets/gpx/2025-08-30-taillefer.gpx
 photos:
   - /assets/img/taillefer/1.jpg  
   - /assets/img/taillefer/2.jpg
+  - /assets/img/taillefer/3.jpg
+  - /assets/img/taillefer/4.jpg
+  - /assets/img/taillefer/5.jpg
 # Optionnel (pour un point instantané sur la carte d'accueil) :
 lat: 45.035
 lng: 5.921
-# cover: /assets/img/taillefer-1.jpg
+cover: /assets/img/taillefer/2.jpg
 ---
 
 Itinéraire en boucle différent du classique via le pas de la Mine et retour par les **lacs du plateau (Fourchu, Noir, Canard)**.
